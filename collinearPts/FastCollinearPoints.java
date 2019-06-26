@@ -11,14 +11,13 @@ import edu.princeton.cs.algs4.StdOut;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedList;
 
 public class FastCollinearPoints {
 
     private LineSegment[] lineSegments;
     private ArrayList<LineSegment> lineSegmentArrayList = new ArrayList<>();
 
-    private HashMap<Double, ArrayList<Point>> foundStartingpoints = new HashMap<>();
 
     public FastCollinearPoints(Point[] points) {
         checkArgs(points);
@@ -29,35 +28,39 @@ public class FastCollinearPoints {
 
         Arrays.sort(pointsCopy);
 
+
+
         for (Point head: points) {
             Arrays.sort(pointsCopy, head.slopeOrder());
 
+            int j = 0;
+
+            LinkedList<Point> pointsOnLine = new LinkedList<>();
+
+            double prev = 0.0;
+
+            for (Point point:pointsCopy) {
+                double curr = head.slopeTo(point);
+                if (j == 0 || point.slopeTo(head) != prev) {
 
 
-            ArrayList<Point> pointsOnLine = new ArrayList<>();
+                    if (pointsOnLine.size() >= 3) {
+                        pointsOnLine.add(head);
+                        Collections.sort(pointsOnLine);
+                        if (head.compareTo(pointsOnLine.getFirst()) == 0) {
+                            lineSegmentArrayList.add(new LineSegment(pointsOnLine.getFirst(),
+                                                                     pointsOnLine.getLast()));
+                        }
 
-            double prev = Double.NEGATIVE_INFINITY;
-            double curr = 0.0;
 
-            for (int j = 1; j < n; j++) {
-                curr = head.slopeTo(pointsCopy[j]);
-
-                if (curr == prev) {
-                    pointsOnLine.add(pointsCopy[j]);
-                }
-                else {
-                    addSegment(pointsOnLine, head, prev);
-
+                    }
                     pointsOnLine.clear();
-
-                    pointsOnLine.add(pointsCopy[j]);
                 }
 
-                prev = curr;
-
+                pointsOnLine.add(point);
+                prev = point.slopeTo(head);
+                j++;
             }
-            addSegment(pointsOnLine, head, prev);
-
 
         }
 
@@ -90,38 +93,7 @@ public class FastCollinearPoints {
         }
     }
 
-    private void addSegment(ArrayList<Point> pointsOnLine, Point head, double key) {
 
-        if (pointsOnLine.size() < 3) {
-            return;
-        }
-
-        pointsOnLine.add(head);
-
-        ArrayList<Point> startingPoints = foundStartingpoints.get(key);
-        Collections.sort(pointsOnLine);
-
-        Point startPoint = pointsOnLine.get(0);
-        Point endPoint = pointsOnLine.get(pointsOnLine.size() - 1);
-
-        if (startingPoints == null) {
-            startingPoints = new ArrayList<>();
-            startingPoints.add(startPoint);
-            foundStartingpoints.put(key, startingPoints);
-        }
-        else {
-            for (Point point: startingPoints) {
-                if (point.compareTo(startPoint) == 0) {
-                    return;
-                }
-            }
-
-            startingPoints.add(startPoint);
-        }
-
-        lineSegmentArrayList.add(new LineSegment(startPoint, endPoint));
-
-    }
 
     public static void main(String[] args) {
         // read the n points from a file
